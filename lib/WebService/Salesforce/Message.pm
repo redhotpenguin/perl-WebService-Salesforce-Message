@@ -171,7 +171,7 @@ L<SOAP::Lite>
 
 =head1 AUTHOR
 
-Fred Moyer<lt>fred@redhotpenguin.comE<gt>
+Fred Moyer<lt>fred@redhotpenguin.com<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
