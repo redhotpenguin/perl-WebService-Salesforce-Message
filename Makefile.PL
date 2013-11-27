@@ -1,12 +1,14 @@
-use 5.014002;
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
 use ExtUtils::MakeMaker;
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
+
 WriteMakefile(
-    NAME              => 'WebService::Salesforce::Message',
-    VERSION_FROM      => 'lib/WebService/Salesforce/Message.pm', # finds $VERSION
-    PREREQ_PM         => {}, # e.g., Module::Name => 1.1
-    ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM  => 'lib/WebService/Salesforce/Message.pm', # retrieve abstract from module
-       AUTHOR         => 'A. U. Thor <fred@oak.iparadigms.com>') : ()),
+    NAME          => 'WebService::Salesforce::Message',
+    VERSION_FROM  => 'lib/WebService/Salesforce/Message.pm',
+    PREREQ_PM     => { 'Moo' => 0, 'XML::LibXML' => 0 },
+    ABSTRACT_FROM => 'lib/WebService/Salesforce/Message.pm',
+    AUTHOR        => 'Fred Moyer <fred@redhotpenguin.com>',
 );
