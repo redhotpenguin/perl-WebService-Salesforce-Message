@@ -3,8 +3,15 @@
 use strict;
 use warnings;
 
-use Test::More tests => 14;
-BEGIN { use_ok('WebService::Salesforce::Message') }
+use Test::More tests => 16;
+
+BEGIN {
+    use_ok('WebService::Salesforce::Message');
+    can_ok(
+        'WebService::Salesforce::Message',
+        (qw( get ack attrs object_type sobject ))
+    );
+}
 
 my $xml = <<'XML';
 <?xml version="1.0" encoding="UTF-8"?>
@@ -50,4 +57,5 @@ cmp_ok( $msg->get('Id'),         'eq', 'a29e0000000K4P0AAK' );
 cmp_ok( $msg->get('Abbrev__c'),  'eq', 'AR' );
 cmp_ok( $msg->get('Country__c'), 'eq', 'a28e00000002hMtAAI' );
 cmp_ok( $msg->get('Name'),       'eq', 'Arkansas' );
+like( $msg->ack, qr/xml/, 'check xml ack' );
 

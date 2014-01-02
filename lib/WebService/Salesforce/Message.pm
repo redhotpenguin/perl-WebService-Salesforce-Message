@@ -3,7 +3,7 @@ package WebService::Salesforce::Message;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Moo;
 use XML::LibXML;
@@ -94,7 +94,8 @@ has 'notification_id' => (
     lazy    => 1,
     default => sub {
         my $self = shift;
-        return $self->notification->getChildrenByTagName('Id')->[0]->textContent;
+        return $self->notification->getChildrenByTagName('Id')->[0]
+          ->textContent;
     }
 );
 
@@ -128,6 +129,22 @@ has 'attrs' => (
             map  { $_->localname }
             grep { $_->isa('XML::LibXML::Element') } @childnodes
         ];
+    }
+);
+
+has 'ack' => (
+    is      => 'ro',
+    default => sub {
+        return <<ACK;
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+    <soapenv:Body>
+        <notificationsResponse xmlns="http://soap.sforce.com/2005/09/outbound">
+            <Ack>true</Ack>
+        </notificationsResponse>
+    </soapenv:Body>
+</soapenv:Envelope>
+ACK
     }
 );
 
