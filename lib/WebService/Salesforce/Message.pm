@@ -4,7 +4,7 @@ use Moo;
 use XML::LibXML;
 use WebService::Salesforce::Message::Notification;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 has 'xml' => ( is => 'ro', required => 1 );
 

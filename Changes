@@ -1,5 +1,8 @@
 Revision history for Perl extension WebService::Salesforce::Message.
 
+0.04  Thu Jan 16 2014
+    - Add Notification.pm to MANIFEST
+
 0.03  Thu Jan 16 2014
     - Add Notification class and ability to handle multiple notifications
 
