@@ -1,12 +1,10 @@
 package WebService::Salesforce::Message;
 
-use strict;
-use warnings;
-
-our $VERSION = '0.02';
-
 use Moo;
 use XML::LibXML;
+use WebService::Salesforce::Message::Notification;
+
+our $VERSION = '0.03';
 
 has 'xml' => ( is => 'ro', required => 1 );
 
@@ -16,18 +14,36 @@ has 'dom' => (
     default => sub {
         my $self = shift;
         XML::LibXML->load_xml( string => $self->xml );
-    }
+        }
+);
+
+has 'notifications_element' => (
+    is      => 'ro',
+    lazy    => 1,
+    default => sub {
+        my $self                      = shift;
+        my ( $node )                  = $self->dom->findnodes( '/soapenv:Envelope/soapenv:Body' );
+        my ( $notifications_element ) = $node->getChildrenByTagName( 'notifications' );
+
+        return $notifications_element;
+
+        }
 );
 
 has 'notifications' => (
     is      => 'ro',
     lazy    => 1,
     default => sub {
-        my $self = shift;
-        my ($node) = $self->dom->findnodes('/soapenv:Envelope/soapenv:Body');
-        my ($notifications) = $node->getChildrenByTagName('notifications');
-        return $notifications;
-    }
+        my $self                  = shift;
+        my $notification_elements = $self->notifications_element->getChildrenByTagName( 'Notification' );
+
+        my @notifications;
+        foreach my $notification_element ( @{$notification_elements} ) {
+            push @notifications, WebService::Salesforce::Message::Notification->new( {
+                    notification_element => $notification_element } );
+        }
+        return \@notifications;
+        }
 );
 
 has 'organization_id' => (
@@ -35,9 +51,9 @@ has 'organization_id' => (
     lazy    => 1,
     default => sub {
         my $self = shift;
-        return $self->notifications->getChildrenByTagName('OrganizationId')->[0]
-          ->textContent;
-    }
+        return $self->notifications_element->getChildrenByTagName( 'OrganizationId' )->[0]
+            ->textContent;
+        }
 );
 
 has 'action_id' => (
@@ -45,9 +61,9 @@ has 'action_id' => (
     lazy    => 1,
     default => sub {
         my $self = shift;
-        return $self->notifications->getChildrenByTagName('ActionId')->[0]
-          ->textContent;
-    }
+        return $self->notifications_element->getChildrenByTagName( 'ActionId' )->[0]
+            ->textContent;
+        }
 );
 
 has 'session_id' => (
@@ -55,9 +71,9 @@ has 'session_id' => (
     lazy    => 1,
     default => sub {
         my $self = shift;
-        return $self->notifications->getChildrenByTagName('SessionId')->[0]
-          ->textContent;
-    }
+        return $self->notifications_element->getChildrenByTagName( 'SessionId' )->[0]
+            ->textContent;
+        }
 );
 
 has 'enterprise_url' => (
@@ -65,9 +81,9 @@ has 'enterprise_url' => (
     lazy    => 1,
     default => sub {
         my $self = shift;
-        return $self->notifications->getChildrenByTagName('EnterpriseUrl')->[0]
-          ->textContent;
-    }
+        return $self->notifications_element->getChildrenByTagName( 'EnterpriseUrl' )->[0]
+            ->textContent;
+        }
 );
 
 has 'partner_url' => (
@@ -75,61 +91,9 @@ has 'partner_url' => (
     lazy    => 1,
     default => sub {
         my $self = shift;
-        return $self->notifications->getChildrenByTagName('PartnerUrl')->[0]
-          ->textContent;
-    }
-);
-
-has 'notification' => (
-    is      => 'ro',
-    lazy    => 1,
-    default => sub {
-        my $self = shift;
-        return $self->notifications->getChildrenByTagName('Notification')->[0];
-    }
-);
-
-has 'notification_id' => (
-    is      => 'ro',
-    lazy    => 1,
-    default => sub {
-        my $self = shift;
-        return $self->notification->getChildrenByTagName('Id')->[0]
-          ->textContent;
-    }
-);
-
-has 'sobject' => (
-    is      => 'ro',
-    lazy    => 1,
-    default => sub {
-        my $self = shift;
-        return $self->notification->getChildrenByTagName('sObject')->[0];
-    }
-);
-
-has 'object_type' => (
-    is      => 'ro',
-    lazy    => 1,
-    default => sub {
-        my $self = shift;
-        my ( $ns, $type ) =
-          split( ':', $self->sobject->getAttribute('xsi:type') );
-        return $type;
-    }
-);
-
-has 'attrs' => (
-    is      => 'ro',
-    lazy    => 1,
-    default => sub {
-        my $self       = shift;
-        my @childnodes = $self->sobject->childNodes();
-        return [
-            map  { $_->localname }
-            grep { $_->isa('XML::LibXML::Element') } @childnodes
-        ];
-    }
+        return $self->notifications_element->getChildrenByTagName( 'PartnerUrl' )->[0]
+            ->textContent;
+        }
 );
 
 has 'ack' => (
@@ -145,13 +109,8 @@ has 'ack' => (
     </soapenv:Body>
 </soapenv:Envelope>
 ACK
-    }
+        }
 );
-
-sub get {
-    my ( $self, $attr ) = @_;
-    return $self->sobject->findnodes("./sf:$attr")->[0]->textContent;
-}
 
 1;
 
@@ -168,10 +127,12 @@ WebService::Salesforce::Message - Perl extension for Salesforce outbound message
 
   my $xml = read_in_salesforce_soap_message();
   my $message = WebService::Salesforce::Message->new( xml => $xml );
-
-  my $attrs = $message->attrs; # Id, other attributes of the object in the message
-  my $object_id = $message->get('Id');
   my $organization_id = $message->organization_id;
+  my $ack = $message->ack; # xml response to SFDC to indicate success
+
+  my $notifications = $message->notifications; # array of notification objects;
+  my $attrs = $notifications->[0]->attrs; # Id, other attributes of the object in the message
+  my $object_id = $notifications->[0]->get('Id');
 
 =head1 DESCRIPTION
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension WebService::Salesforce::Message.
 
+0.03  Thu Jan 16 2014
+    - Add Notification class and ability to handle multiple notifications
+
 0.02  Thu Jan 02 2014
     - Include an ack method for salesforce responses
 
